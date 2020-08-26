@@ -9,6 +9,8 @@ function Header() {
             <Navbar.Brand href="#home">REInvestify</Navbar.Brand>
             <Nav className="mr-auto">
                 <Nav.Link href="#home">Home</Nav.Link>
+                <Nav.Link href="#home">Calculator</Nav.Link>
+                <Nav.Link href="#home">Reports</Nav.Link>
                 <Nav.Link href="#about">About</Nav.Link>
             </Nav>
         </Navbar>
