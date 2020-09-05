@@ -4,38 +4,9 @@ import Header from '../header/header'
 import Sidebar from '../sidebar/sidebar'
 import Calculator from '../calculator/calculator'
 
-// interface Person {
-//   userId: number;
-//   title: string;
-// }
 
-// const App = () => {
-//   const [person, setPerson] = useState<Person>({'userId':0, 'title':''});
-
-//   const fetchPerson = async () => {
-    
-//     const response: Response  = await fetch('https://jsonplaceholder.typicode.com/todos/1');
-//     //const body = await response.json();
-//     console.log(await response.json())
-//     setPerson({title:'Tim', userId:1})
-
-//   }
-//   return (
-//     <div>
-//         <button onClick={fetchPerson}>Submit</button>
-//         {person}
-//     </div>
-//   )
-
-// };
-
-interface Book {
-  name: string;
-  index: number;
-}
-
-interface User {
-  gender: string; 
+interface Person { 
+  gender: string;
   cell: string; 
 }
 
@@ -45,103 +16,79 @@ interface ToDo {
   completed: boolean; 
 }
 
-const App = () => {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [user, setUser] = useState<User>({gender:'', cell:''});
-  const [todo, setTodo] = useState<ToDo>({userId:0, title:'', completed:false})
-  const [loading, setLoading] = useState(true) 
+interface Book {
+  title: string;
+}
 
-  const fetchBooks = async () => {
-    const response = await fetch('https://www.anapioficeandfire.com/api/books')
-    const json = await response.json()
-    setBooks(json);
+
+const App = () => {
+
+  const [loading, setLoading] = useState(false) 
+  const [person, setPerson] = useState<Person>({gender:'', cell:''}); 
+  const [todo, setTodo] = useState<ToDo>({userId:0, title:'', completed:false})
+  const [books, setBooks] = useState<Book[]>([])
+
+  const fetchPerson = async () => {
+    const response = await fetch('https://randomuser.me/api/');
+    const json = await response.json();
+    setPerson(json.results[0])
   }
 
   const fetchTodo = async () => {
-    const response = await fetch('https://jsonplaceholder.typicode.com/todos/1')
-    const json = await response.json()
+    const response = await fetch('https://jsonplaceholder.typicode.com/todos/1');
+    const json = await response.json();
     setTodo(json)
   }
 
-  const fetchUser = async () => {
-    const response = await fetch('https://randomuser.me/api/')
-    const json = await response.json()
-    setUser(json.results[0])
-
+  const fetchBooks = async () => {
+    const response = await fetch('https://www.anapioficeandfire.com/api/books')
+    const json = await response.json();
+    setBooks(json)
+  }
+  const getJson = async (url: any): Promise<any> => {
+    const response = await fetch(url)
+    return await response.json()
   }
 
-  const fetchEachAsync = async () => {
-    const response =  await fetch('https://www.anapioficeandfire.com/api/books')
-    setBooks(await response.json())
-
-    const response2 = await fetch('https://randomuser.me/api/')
-    setUser((await response2.json()).results[0])
-
-    const response3 = await fetch('https://jsonplaceholder.typicode.com/todos/1')
-    setTodo(await response3.json())
-  }
-
-  const fetchPromiseAll = async () => {
-    try {
-      setBooks([])
-      const response = fetch('https://www.anapioficeandfire.com/api/books')
-      const response2 = fetch('https://randomuser.me/api/')
-      const response3 = fetch('https://jsonplaceholder.typicode.com/todos/1')
-      const [bookResponse, userResponse, todoResponse] = await Promise.all([response, response2, response3])   
-      const [bookJSON, userJSON, todoJSON] = await Promise.all([bookResponse.json(), userResponse.json(), todoResponse.json()])
-      setBooks(bookJSON)
-      setTodo(todoJSON)
-      setUser({gender: userJSON.results[0].gender, 
-              cell: userJSON.results[0].cell})
-      setLoading(false)
-    } catch(err) {
-      console.warn(err)
-    }
-  }
-
-  const fetchPromiseAllCleanedUp = async () => {
+  const fetchAll = async () => {
     try { 
       setLoading(true)
-      await Promise.all([
-                        fetchTodo(), 
-                        fetchBooks(), 
-                        fetchUser()
-                      ])
-      setLoading(false)
-    } catch(err) {
-      console.error(err)
+      const [p ,t, b] = await Promise.all([
+                                        getJson('https://randomuser.me/api/'), 
+                                        getJson('https://jsonplaceholder.typicode.com/todos/1'),
+                                        getJson('https://www.anapioficeandfire.com/api/books')
+                                      ])
+      setPerson(p.results[0])
+      setTodo(t) 
+      setBooks(b)
+      console.log(books)
+      setLoading(false)      
+      const newPerson: Person = {gender:p.results[0].gender, cell:p.results[0].cell}
+      console.log(newPerson)
+    } catch(error) {
+      console.error(error)
     }
+  }
 
+  const clear = async () => {
+      setBooks([])
+      setTodo({userId:0, title:'', completed:false})
+      setPerson({gender:'', cell:''})
   }
 
   return (
-    <div className="App">
+      <div>
+        <button onClick={clear}>Clear</button>
+        <button onClick={fetchTodo}>Get Todo</button>
+        <button onClick={fetchPerson}>Get Person</button>
+        <button onClick={fetchAll}>Get All</button> 
+        <br/>
+          {loading ? <a>Loading</a> :  <a>{todo.title} {person.gender}</a> }
 
-    <button onClick={fetchBooks}>Books</button>
-    <button onClick={fetchTodo}>ToDo</button>
-    <button onClick={fetchUser}>User</button>
+          { books.length != 0 ? <a>{books[0].title}</a> : <a></a>}
 
-    <br/>
-    <br/>
+      </div>
 
-    <button onClick={fetchEachAsync}>Fetch Each</button>
-    <button onClick={fetchPromiseAllCleanedUp}>Promise All</button>
-
-    {books.map((book, index) => {
-         const indexToDisplay = index += 1;
-         return <div key={`book${index}`}>{indexToDisplay}&nbsp;{book.name}</div>
-       })}
-
-    <br/>
-
-    { loading ? <a>Loading Component</a> : <a>Not Loading</a> }
-
-    <a>{user.gender}</a>
-
-    <br/>
-    <a>{todo.title}</a>
-
-    </div>
-  );
-};
+  )
+}
 export default App;
