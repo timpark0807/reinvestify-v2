@@ -306,9 +306,10 @@ interface User {
 }
 
 interface Block {
-  id: number;
+  blockID: number;
   type: string; 
-  data: string; 
+  axis: string[] 
+  values: number[]; 
   createdBy: string; 
   createdOn: string;  
 }
@@ -334,8 +335,13 @@ walk through why this wouldn't work in javascript
     - response.json() depends on response resolving first.  
     - How can we guarantee? 
 
-introduce Promises/async await keywords 
+Promises  
   - best of both worlds
+  - Promise allows us to not block out code 
+  - guarantees that the .then will execute only after the promise resolves
+
+Async/Await
+  - Syntactical sugar over Promises 
   - pauses our function on the await line until fetch resolves 
   - doesn't block our main thread so user can use the site 
   - reads like familiar syncronous code 
@@ -403,37 +409,58 @@ interface Blocks {
 
 
 
-web apis = [      fetch()        ]
+web apis = [             ]
  
 
 event  = [              ]
 queue 
 
+micro
+task   = [      fetch().then()       ]
+queue 
+
 event
 loop 
               
-                
-call            fetchBlocks() 
-stack    = [    main()       ] 
+                  
+call              fetchBlocks()
+stack    = [      main()       ] 
 
 */
 
 
-const fetchBlocks = async (url: any) => {
-  const response = await fetch(url);
-  const json = await response.json(); 
-  return json; 
+
+interface ToDo {
+  userId: number; 
+  title: string;
+  completed: boolean; 
 }
 
-fetchBlocks() 
-
-
 const App = () => {
+  const [todo, setTodo] = useState<ToDo>({userId:0, title:'', completed:false})
 
 
+  const fetchBlocks = async () => {
+    try {
+      const response = await fetch('https://jsonplaceholder.typicode.com/todos/2');
+      const json = await response.json(); 
+      console.log(todo)
+      setTodo(json)      
+      console.log(todo)
+    } catch(err) {
+      console.error(err)
+    }
+
+    // fetch('https://jsonplaceholder.typicode.com/todos/3')
+    // .then(response => response.json())
+    // .then(json => {
+    //   setTodo(json)
+    //   console.log(todo)
+    // })
+  }
   return (
     <div>
-          {/* <button onClick={fetchBlockData}>This</button> */}
+          <button onClick={fetchBlocks}>This</button>
     </div>
   )
 
