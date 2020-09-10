@@ -9,6 +9,7 @@ import { request } from 'https';
 import { getHeapCodeStatistics } from 'v8';
 import { userInfo } from 'os';
 import { findRenderedDOMComponentWithTag } from 'react-dom/test-utils';
+import { callbackify } from 'util';
 
 // interface Person {
 //   userId: number;
@@ -426,7 +427,6 @@ loop
 call              fetchBlocks()
 stack    = [      main()       ] 
 
-*/
 
 
 
@@ -464,5 +464,298 @@ const App = () => {
     </div>
   )
 
+*/
+
+/*
+
+
+
+client -------- api   
+   x
+
+
+Goal: Retrieve the blocks data and display it to the user when he/she refreshes the page 
+
+Tasks
+
+    1. Send the request for initial block IDs 
+
+        endpoint: https://www.airtable.com/v3.3/blocks/<userID>/<workspaceID> 
+        parameter: userID: string; 
+
+    2. Retrieve the response for initial block IDs 
+        returns 
+        body = {"blockIDs": string[]}
+
+    3. Send the request for the data of the block IDs
+
+        endpoint: https://www.airtable.com/v3.3/blocks/data/<blockIDserialization> 
+        parameter: blockIDs: string 
+        Note: We need to serialize the blockID's string array into the query string parameter 
+
+
+    4. Retrieve the response and process it 
+
+        returns 
+
+        interface Block {
+            blockID: number;
+            type: string; 
+            xAxis: string;
+            yAxis: string;
+          }
+
+    5. Display it to the user 
+
+Scope/Requirements  
+
+    1. Sending the request 
+      We assume the client is the user's browser
+      The api is our endpoint 
+
+      Requests are sent via HTTP 
+      GET/POST/PUT/UPDATE.. etc. 
+
+      We want to use GET since we are retrieving data 
+
+        What is our endpoint? 
+        What is our parameters? 
+        https://www.airtable.com/v3/blocks/<userID> 
+
+
+    2. Retrieve the response 
+      What does the response look like? 
+
+    3. Authentication
+      api key 
+      -> passed in through the header 
+
+
+
+web apis   [              ]
+
+task queue  = [              ]
+
+event
+loop 
+                
+                requestAndParse() 
+                loadBlocks() 
+callstack = [   main()      ]
+
+
+
+
+
+const requestAndParse = async (url: string, parameters: string) => {
+  const response = await fetch(url + parameters);
+  const json = await response.json();
+  return json;
+}
+
+const loadBlocks = async () => {
+  const json1 = await requestAndParse('https://jsonplaceholder.typicode.com/todos/', '4') 
+  const json2 = await requestAndParse('https://jsonplaceholder.typicode.com/todos/', json1.userId.toString())
+  console.log(json2) 
+  // send request for ids 
+  // retreive the response and parse it 
+  // requestAndParse('https://jsonplaceholder.typicode.com/todos/', '4') 
+  // .then(json => requestAndParse('https://jsonplaceholder.typicode.com/todos/', json.userId.toString()))
+  // .then(json2 => console.log(json2))
+  // .catch(err => console.error(err))
+}
+
+*/
+
+interface Block {
+  blockID: number;
+  type?: string; 
+  xAxis?: string;
+  yAxis?: string;
+}
+
+const App = () => {
+
+  const [blocks, setBlocks] = useState<Block[]>(); 
+
+  const requestAndParse = (url: string, parameters: string) => {
+    return fetch(url + parameters)
+          .then(response => response.json()) 
+  }
+
+  const loadBlocks = () => {
+    
+    // send request for ids 
+    // retreive the response and parse it 
+    requestAndParse('https://jsonplaceholder.typicode.com/todos/', '4') 
+    .then(json => requestAndParse('https://jsonplaceholder.typicode.com/todos/', json.userId.toString()))
+    .then(json2 => console.log(json2))
+    .catch(err => console.error(err))
+  }
+    // send the request for block data 
+    // retrieve the response and parse it 
+    // const json2 = requestAndParse() 
+
+    // // display to the user 
+    // setBlocks(json2) 
+
+  const requestAndParse2 = async (url: string, parameters: string) => {
+      const response = await fetch(url + parameters);
+      const json = await response.json();
+      return json;
+    }
+    
+  const loadBlocks2 = async () => {
+      const json1 = await requestAndParse2('https://jsonplaceholder.typicode.com/todos/', '4') 
+      console.log(json1)
+      const json2 = await requestAndParse2('https://jsonplaceholder.typicode.com/todos/', json1.userId.toString())
+      console.log(json2) 
+      // send request for ids 
+      // retreive the response and parse it 
+      // requestAndParse('https://jsonplaceholder.typicode.com/todos/', '4') 
+      // .then(json => requestAndParse('https://jsonplaceholder.typicode.com/todos/', json.userId.toString()))
+      // .then(json2 => console.log(json2))
+      // .catch(err => console.error(err))
+    }
+
+  return (
+    <div>
+      <button onClick={loadBlocks}>Click</button>
+      <button onClick={loadBlocks2}>Click2</button>
+
+    </div>
+  )
 }
 export default App;
+
+
+
+/*
+
+
+
+client   ---------  api   
+  x
+
+
+Goal
+  - Display blocks to the user when he loads/refreshes the page 
+
+
+Task 
+  1. Send a request to get the user's blocks 
+    - api endpoint
+    - parameters 
+
+  2. Retrieve the response and process it 
+    - what the does the body look like? 
+
+
+  3. Send a request to get the block data, using step 2's result 
+    - api endpoints
+    - parameters 
+
+  4. Retrieve the response and process 
+    - what the does the body look like? 
+
+
+  5. Display the data to the user 
+
+
+Requirements/Scope 
+  1. Sending the Request
+    - HTTP Request 
+      -> GET Request 
+    
+    - api endpoints
+    - parameters 
+
+  2. Retreiving the Request 
+    - the body will contain a json of what we need 
+
+  3. Authentication 
+    - 
+
+web apis =  [  fetch()  ]
+
+
+task queues = [    ]
+
+event
+loop 
+             
+             requestAndProcess()
+call         loadBlocks()
+stack  =  [  main()         ]
+
+
+const requestAndProcess = (apiEndpoint: string, queryStringParameter: string) => {
+  // const response = fetch(apiEndpoint + queryStringParameter)
+  // const json = response.json()
+  return fetch(apiEndpoint + queryStringParameter)
+        .then(response => response.json())
+}
+
+const loadBlocks = () => {
+
+  requestAndProcess(url1, parameter1)
+  .then(json => requestAndProcess(url2, json.blockIDs)) 
+  .then(json2 => setBlocks(json2))
+  .catch(err => console.error(err)) 
+
+  // Send a request to get the user's blocks
+  // retrieve the response and process it 
+
+  // send a request to get the users block data, using step 2's result
+  // retrieve the response and process it 
+  
+  // display to the user 
+
+}
+
+
+const requestAndProcess = async (apiEndpoint: string, queryStringParameter: string) => {
+  const response = await fetch(apiEndpoint + queryStringParameter)
+  return await response.json() 
+}
+
+const loadBlocks = async (userID: string) => {
+  try {
+    const json1 = await requestAndProcess(url1, userID) 
+    const json2 = await requestAndProcess(url2, parameter2) 
+    setBlocks(json2) 
+  } catch(err) {
+    console.error(err) 
+  }
+
+  requestAndProcess(url1, parameter1)
+  .then(json => requestAndProcess(url2, json.blockIDs)) 
+  .then(json2 => setBlocks(json2))
+  .catch(err => console.error(err)) 
+
+  // Send a request to get the user's blocks
+  // retrieve the response and process it 
+
+  // send a request to get the users block data, using step 2's result
+  // retrieve the response and process it 
+  
+  // display to the user 
+
+}
+
+
+
+loadBlocks() 
+
+
+
+const App = () => {
+  return (
+    <div>
+      <button onClick={}>ClickMe</button>
+
+    </div>
+  )
+}
+export default App;
+*/
